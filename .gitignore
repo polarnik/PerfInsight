@@ -39,3 +39,6 @@ Thumbs.db
 # Logs/heap dumps
 *.log
 *.hprof
+
+# Project
+/.env
