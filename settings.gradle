@@ -1,1 +1,8 @@
 rootProject.name = 'PerfInsight'
+include(
+  ":core",
+  ":yourkit-convertor",
+  ":cli",
+  ":demo-benchmark",
+  ":demo-service"
+)
