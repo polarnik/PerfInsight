@@ -15,3 +15,27 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+
+# Java/Build
+/build/
+/out/
+/target/
+*.class
+
+# Gradle
+.gradle/
+gradle-app.setting
+
+# IntelliJ
+.idea/
+*.iml
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs/heap dumps
+*.log
+*.hprof
