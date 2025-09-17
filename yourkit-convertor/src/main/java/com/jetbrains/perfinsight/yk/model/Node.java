@@ -22,6 +22,16 @@ public class Node {
     @XmlAttribute(name = "count")
     public Long count;
 
+    /**
+     * There is a relation:
+     * 100.0 * (count field of current node) / (count field of parent node).
+     *
+     * For example, the parent count is 100, the current count is 1000,
+     * the multiplicator is 100.0 * 1000 / 100 = 10,000.
+     */
+    @XmlAttribute(name = "count_multiplicator_percent")
+    public Double count_multiplicator_percent;
+
     // child <node> elements (0..n)
     @XmlElement(name = "node")
     public List<Node> children = new ArrayList<>();
