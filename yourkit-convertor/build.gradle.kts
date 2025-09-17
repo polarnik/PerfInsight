@@ -19,6 +19,8 @@ dependencies {
   implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.2")
   runtimeOnly("org.glassfish.jaxb:jaxb-runtime:4.0.5")
   testImplementation("org.testcontainers:testcontainers:1.21.3")
+  // JSON serialization for tests
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
 }
 
 tasks.test {

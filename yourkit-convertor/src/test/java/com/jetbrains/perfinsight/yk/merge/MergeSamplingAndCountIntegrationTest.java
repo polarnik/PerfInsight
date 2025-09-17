@@ -1,5 +1,7 @@
 package com.jetbrains.perfinsight.yk.merge;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.jetbrains.perfinsight.yk.calculate.CountingFieldsCalculator;
 import com.jetbrains.perfinsight.yk.calculate.SamplingFieldsCalculator;
 import com.jetbrains.perfinsight.yk.filter.Filter;
@@ -56,6 +58,17 @@ public class MergeSamplingAndCountIntegrationTest {
         try (InputStream is = Files.newInputStream(path)) {
             return (View) unmarshaller.unmarshal(is);
         }
+    }
+
+    private void writeJsonToFile(View view, Path path) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.writeValue(path.toFile(), view);
+    }
+
+    private View readJsonFromFile(Path path) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(path.toFile(), View.class);
     }
 
     private int countNodes(View view) {
@@ -152,10 +165,21 @@ public class MergeSamplingAndCountIntegrationTest {
         System.out.println("[TEST] Merged view written to: " + tmpMerged.toAbsolutePath());
         assertTrue(Files.exists(tmpMerged));
 
-        // Optional sanity: unmarshal back
+        // 8.1) Also serialize final result to JSON
+        Path tmpMergedJson = buildDir.resolve(currentTimestamp + "-merged.json");
+        writeJsonToFile(merged, tmpMergedJson);
+        System.out.println("[TEST] Merged view (JSON) written to: " + tmpMergedJson.toAbsolutePath());
+        assertTrue(Files.exists(tmpMergedJson));
+
+        // Optional sanity: unmarshal back (XML)
         View mergedBack = readFromFile(tmpMerged);
         assertNotNull(mergedBack);
         assertTrue(countNodes(mergedBack) > 0);
+
+        // Optional sanity: read back JSON and verify
+        View mergedJsonBack = readJsonFromFile(tmpMergedJson);
+        assertNotNull(mergedJsonBack);
+        assertTrue(countNodes(mergedJsonBack) > 0);
 
         // 9) Compute merged fraction (nodes with non-null count)
         int total = countNodes(mergedBack);
