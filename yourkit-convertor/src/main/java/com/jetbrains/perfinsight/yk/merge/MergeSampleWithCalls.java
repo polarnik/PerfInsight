@@ -4,6 +4,8 @@ import com.jetbrains.perfinsight.yk.model.Node;
 import com.jetbrains.perfinsight.yk.model.View;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * The class iterates by sampling Nodes and merges them with corresponding calls Nodes.
@@ -30,6 +32,8 @@ import java.util.*;
  *  - count (from a corresponding count Node)
  */
 public class MergeSampleWithCalls {
+    private static final Logger LOG = Logger.getLogger(MergeSampleWithCalls.class.getName());
+
     View doMerge(View sampling, View calls) {
         // Defensive checks
         if (sampling == null) return null;
@@ -60,7 +64,7 @@ public class MergeSampleWithCalls {
         merged.samples_percent = sample.samples_percent;
 
         // find corresponding count node by call_tree within the current scope
-        Node matched = pickMatching(scope, sample.call_tree);
+        Node matched = pickMatching(scope, sample);
         merged.count = (matched == null) ? null : matched.count;
 
         // Determine next scope: children of matched calls node; if no match, restart from calls roots
@@ -75,23 +79,39 @@ public class MergeSampleWithCalls {
         return merged;
     }
 
-    private Node pickMatching(List<Node> scope, String callTree) {
-        if (scope == null || scope.isEmpty()) return null;
+    private Node pickMatching(List<Node> scope, Node sample) {
+        if (scope == null || scope.isEmpty() || sample == null) return null;
+        // 1) Strict match by call_tree
+        Node strict = pickBestBy(scope, n -> Objects.equals(n.call_tree, sample.call_tree));
+        if (strict != null) return strict;
+        // 2) Fuzzy fallback: match by javaFile + javaMethod, ignoring line number
+        if (sample.javaFile != null && sample.javaMethod != null) {
+            Node fuzzy = pickBestBy(scope, n -> Objects.equals(n.javaFile, sample.javaFile)
+                    && Objects.equals(n.javaMethod, sample.javaMethod));
+            if (fuzzy != null) {
+                if (!Objects.equals(fuzzy.call_tree, sample.call_tree)) {
+                    // Log warning about mismatch in call_tree (likely due to line number difference)
+                    LOG.log(Level.WARNING, () -> String.format("Fuzzy merge: call_tree mismatch (line number tolerated). sample='%s' vs calls='%s'", sample.call_tree, fuzzy.call_tree));
+                }
+                return fuzzy;
+            }
+        }
+        return null;
+    }
+
+    private interface Matcher { boolean test(Node n); }
+
+    private Node pickBestBy(List<Node> scope, Matcher matcher) {
         Node best = null;
         Long bestCount = null;
         for (Node n : scope) {
-            if (Objects.equals(n.call_tree, callTree)) {
+            if (matcher.test(n)) {
                 if (best == null) {
                     best = n;
                     bestCount = n.count;
-                } else {
-                    // prefer larger non-null count
-                    if (n.count != null) {
-                        if (bestCount == null || n.count > bestCount) {
-                            best = n;
-                            bestCount = n.count;
-                        }
-                    }
+                } else if (n.count != null && (bestCount == null || n.count > bestCount)) {
+                    best = n;
+                    bestCount = n.count;
                 }
             }
         }
