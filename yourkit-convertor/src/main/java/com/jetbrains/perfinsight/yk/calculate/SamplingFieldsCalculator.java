@@ -14,6 +14,22 @@ public class SamplingFieldsCalculator implements Calculator {
     }
 
     private void calculate_samples_percent(Node node, Node parent) {
+        if (node == null) return;
 
+        if (node.samples == null) {
+            node.samples_percent = null;
+        } else if (parent == null) {
+            node.samples_percent = 100.0;
+        } else if (parent.samples == null || parent.samples == 0L) {
+            node.samples_percent = null;
+        } else {
+            node.samples_percent = 100.0 * node.samples.doubleValue() / parent.samples.doubleValue();
+        }
+
+        if (node.children != null) {
+            for (Node ch : node.children) {
+                calculate_samples_percent(ch, node);
+            }
+        }
     }
 }
