@@ -29,22 +29,15 @@ class PerformanceAdviserAgentTest {
 
         // Assert
         assertNotNull(suggestions, "Suggestions should not be null")
-        assertEquals(3, suggestions.size, "Should return exactly 3 suggestions")
-
-        // Verify that each suggestion is not empty
-        suggestions.forEach { suggestion ->
-            assertFalse(suggestion.isBlank(), "Suggestion should not be blank")
-        }
+        assertFalse(suggestions.isBlank(), "Suggestions should not be blank")
 
         // Print the suggestions for debugging
         println("Performance suggestions:")
-        suggestions.forEachIndexed { index, suggestion ->
-            println("${index + 1}. $suggestion")
-        }
+        println(suggestions)
     }
 
     @Test
-    fun `test analyzeFunction returns empty list when function is not found`() {
+    fun `test analyzeFunction returns empty string when function is not found`() {
         // Fail test if GRAZIE_TOKEN is not set
         val grazieToken = System.getenv("GRAZIE_TOKEN")
         if (grazieToken.isNullOrBlank()) {
@@ -62,6 +55,6 @@ class PerformanceAdviserAgentTest {
         }
 
         // Assert
-        assertTrue(suggestions.isEmpty(), "Should return empty list for non-existent function")
+        assertTrue(suggestions.isEmpty(), "Should return empty string for non-existent function")
     }
 }

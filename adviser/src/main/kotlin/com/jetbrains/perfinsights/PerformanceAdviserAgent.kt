@@ -1,8 +1,5 @@
 package com.jetbrains
 
-import com.github.javaparser.StaticJavaParser
-import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.body.MethodDeclaration
 import ai.jetbrains.code.prompt.executor.clients.grazie.koog.model.JetBrainsAIModels
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -55,6 +52,8 @@ class PerformanceAdviserAgent {
 
         Your suggestions should be practical, specific to the code being analyzed,
         and provide measurable performance improvements.
+
+        Output result in Markdown formatting
         """
 
     /**
@@ -62,9 +61,9 @@ class PerformanceAdviserAgent {
      *
      * @param functionName The name of the function to analyze
      * @param sourceFolder The folder containing source files to analyze
-     * @return A list of performance improvement suggestions
+     * @return A string containing performance improvement suggestions
      */
-    suspend fun analyzeFunction(functionName: String, sourceFolder: Path): List<String> {
+    suspend fun analyzeFunction(functionName: String, sourceFolder: Path): String {
         println("Analyzing function: $functionName in folder: $sourceFolder")
 
         // Get the Grazie token from environment variable
@@ -103,20 +102,22 @@ class PerformanceAdviserAgent {
             val targetFunction = findFunction(functionName, sourceFiles)
             if (targetFunction == null) {
                 println("Function '$functionName' not found in the provided source files")
-                return emptyList()
+                return ""
             }
 
             println("Found function '$functionName'. Analyzing for performance improvements...")
 
             // Extract function code and context
-            val functionCode = targetFunction.toString()
+            val functionCode = targetFunction
             val analysisContext = buildAnalysisContext(functionName, functionCode)
 
             // Run the agent with the function code and context
             val result = agent.runAndGetResult(analysisContext)
 
-            // Parse the result into a list of suggestions
-            return result?.split("\n")?.filter { it.isNotBlank() }?.take(3) ?: emptyList()
+
+
+            // Return the result as a single string
+            return result ?: ""
         } catch (e: Exception) {
             throw IllegalStateException("Error using AI for analysis: ${e.message}. AI analysis is required.", e)
         }
@@ -180,29 +181,26 @@ class PerformanceAdviserAgent {
      *
      * @param functionName The name of the function to find
      * @param sourceFiles The source files to search
-     * @return The function declaration if found, null otherwise
+     * @return The function code as a string if found, null otherwise
      */
-    private fun findFunction(functionName: String, sourceFiles: List<Path>): MethodDeclaration? {
+    private fun findFunction(functionName: String, sourceFiles: List<Path>): String? {
         for (sourceFile in sourceFiles) {
             try {
                 if (sourceFile.name.endsWith(".java")) {
-                    val compilationUnit = StaticJavaParser.parse(sourceFile.toFile())
-                    val methods = compilationUnit.findAll(MethodDeclaration::class.java)
-
-                    val method = methods.find { it.nameAsString == functionName }
-                    if (method != null) {
-                        return method
+                    val content = Files.readString(sourceFile)
+                    // Simple approach to find Java methods
+                    val methodPattern = "\\b(public|private|protected)?\\s*(static)?\\s*[\\w<>\\[\\]]+\\s+$functionName\\s*\\([^)]*\\)\\s*\\{[^}]*}".toRegex(RegexOption.DOT_MATCHES_ALL)
+                    val match = methodPattern.find(content)
+                    if (match != null) {
+                        return match.value
                     }
                 } else if (sourceFile.name.endsWith(".kt")) {
-                    // For Kotlin files, we'll use a simpler approach for now
-                    // In a real implementation, we would use the Kotlin compiler API
                     val content = Files.readString(sourceFile)
-                    if (content.contains("fun $functionName") || content.contains("fun `$functionName`")) {
-                        // Create a simple method declaration to represent the Kotlin function
-                        val method = MethodDeclaration()
-                        method.setName(functionName)
-                        method.setBody(StaticJavaParser.parseBlock("{ /* Kotlin function body */ }"))
-                        return method
+                    // Simple approach to find Kotlin functions
+                    val functionPattern = "\\bfun\\s+(`$functionName`|$functionName)\\s*\\([^)]*\\)(\\s*:\\s*[\\w<>\\[\\]]+)?\\s*\\{[^}]*}".toRegex(RegexOption.DOT_MATCHES_ALL)
+                    val match = functionPattern.find(content)
+                    if (match != null) {
+                        return match.value
                     }
                 }
             } catch (e: Exception) {

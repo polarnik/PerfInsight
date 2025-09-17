@@ -7,7 +7,7 @@ include(
   ":yourkit-convertor",
   ":cli",
   ":demo-benchmark",
-  ":demo-service"
+  ":demo-service",
+  ":adviser",
+  ":snapshot-analyzer"
 )
-include 'adviser'
-
