@@ -44,7 +44,11 @@ public class MergeSampleWithCalls {
         merged.javaMethod = sample.javaMethod;
         merged.javaClass = sample.javaClass;
         merged.time_ms = sample.time_ms;
+        merged.self_time_ms = sample.self_time_ms;
+        merged.self_time_percent = sample.self_time_percent;
         merged.samples = sample.samples;
+        merged.self_samples = sample.self_samples;
+        merged.self_samples_percent = sample.self_samples_percent;
         merged.samples_percent = sample.samples_percent;
 
         // find corresponding count node within the current scope (and its subtree)

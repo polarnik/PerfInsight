@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.jetbrains.perfinsight.yk.calculate.CountingFieldsCalculator;
 import com.jetbrains.perfinsight.yk.calculate.SamplingFieldsCalculator;
+import com.jetbrains.perfinsight.yk.calculate.SelfSamplesCalculator;
 import com.jetbrains.perfinsight.yk.filter.Filter;
 import com.jetbrains.perfinsight.yk.filter.FilterSampingBySamplesPercent;
 import com.jetbrains.perfinsight.yk.filter.FilterSamplingByTimePercent;
@@ -123,6 +124,7 @@ public class MergeSamplingAndCountIntegrationTest {
         Filter filter = new FilterSampingBySamplesPercent();
         View filteredSampling = filter.doFilter(sampling, 1.0);
         assertNotNull(filteredSampling);
+        new SelfSamplesCalculator().doCacculate(filteredSampling);
 
         // 3) Serialize filtered to file (under build)
         Path tmpFiltered = buildDir.resolve(currentTimestamp + "-filtered-sampling.xml");
@@ -158,6 +160,7 @@ public class MergeSamplingAndCountIntegrationTest {
         // 7) Apply calculators
         new CountingFieldsCalculator().doCacculate(merged);
         new SamplingFieldsCalculator().doCacculate(merged);
+        new SelfSamplesCalculator().doCacculate(merged);
 
         // 8) Save final result
         Path tmpMerged = buildDir.resolve(currentTimestamp + "-merged.xml");
