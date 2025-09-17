@@ -9,39 +9,24 @@ import java.util.logging.Logger;
 
 /**
  * The class iterates by sampling Nodes and merges them with corresponding calls Nodes.
- * The sampling nodes have fields:
- *  - time_ms
- *  - samples
- *  - samples_percent
+ * Sampling nodes have: time_ms, samples, samples_percent.
+ * Counting nodes have: time_ms, avg_time_ms, count.
  *
- *  The count nodes have fields:
- *   - time_ms
- *   - avg_time_ms
- *   - count
- *
- * Algorithm (optimized & hierarchical):
- *  - For each sampling node, find a matching calls node in the current scope by call_tree only (level is ignored).
- *  - Once a sampling node is matched with a calls node, its children are matched only among the children of that calls node.
- *  - If a sampling node has no match in the current scope, its children are matched starting from the calls roots again.
- *  - When multiple matches exist in a scope, pick the one with the maximum non-null count; if all counts are null, pick the first.
- *
- * The result is a View with sampling Nodes, but nodes have fields:
- *  - time_ms (from a sampling Node)
- *  - samples (from a sampling Node)
- *  - samples_percent (from a sampling Node)
- *  - count (from a corresponding count Node)
+ * Strategy (scoped, normalized, and fuzzy):
+ *  - First try to match by normalized call_tree (ignore line numbers).
+ *  - Then try javaFile + javaMethod.
+ *  - Then try javaClass + javaMethod.
+ *  - If not found at current scope level, search recursively within the scope subtree.
+ *  - When multiple matches exist, pick the one with the highest non-null count.
  */
 public class MergeSampleWithCalls {
     private static final Logger LOG = Logger.getLogger(MergeSampleWithCalls.class.getName());
 
     View doMerge(View sampling, View calls) {
-        // Defensive checks
         if (sampling == null) return null;
         if (sampling.nodes == null) return sampling;
-
         List<Node> callsRoots = (calls == null || calls.nodes == null) ? Collections.emptyList() : calls.nodes;
 
-        // Merge into a new View to avoid mutating input unexpectedly
         View result = new View();
         result.description = sampling.description;
         for (Node root : sampling.nodes) {
@@ -54,7 +39,6 @@ public class MergeSampleWithCalls {
         Node merged = new Node();
         // copy sampling fields
         merged.call_tree = sample.call_tree;
-        // copy parsed java location/method info
         merged.javaFile = sample.javaFile;
         merged.javaFile_line_number = sample.javaFile_line_number;
         merged.javaMethod = sample.javaMethod;
@@ -63,17 +47,13 @@ public class MergeSampleWithCalls {
         merged.samples = sample.samples;
         merged.samples_percent = sample.samples_percent;
 
-        // find corresponding count node by call_tree within the current scope
+        // find corresponding count node within the current scope (and its subtree)
         Node matched = pickMatching(scope, sample);
         merged.count = (matched == null) ? null : matched.count;
 
-        // Determine next scope: children of matched calls node; if no match, consider skip-level fuzzy or restart from calls roots
+        // Next scope: children of matched node if any; otherwise try to keep scope if children can match; else restart from roots
         List<Node> nextScope;
-        boolean skippedLevel = false;
         if (matched == null) {
-            // New fuzzy level: Sampling may have an extra intermediate node that's absent in Counting.
-            // If any child of the current sampling node matches something in the current scope,
-            // we keep the current scope for children (skip this level) and log a WARN.
             Node childMatch = null;
             if (sample.children != null) {
                 for (Node ch : sample.children) {
@@ -82,16 +62,15 @@ public class MergeSampleWithCalls {
                 }
             }
             if (childMatch != null) {
-                skippedLevel = true;
-                nextScope = scope; // don't narrow the scope; effectively skip this level
+                nextScope = scope; // skip-level: keep scope
                 final String sampleCt = sample.call_tree;
                 final String childCt = childMatch.call_tree;
-                LOG.log(Level.WARNING, () -> String.format("Skip-level merge: sampling node without counterpart is bypassed. sampling='%s'; first child matched in calls as '%s'", sampleCt, childCt));
+                LOG.log(Level.FINE, () -> String.format("Skip-level merge: sampling node without counterpart is bypassed. sampling='%s'; first child matched in calls as '%s'", sampleCt, childCt));
             } else {
-                nextScope = callsRoots; // original fallback behavior
+                nextScope = callsRoots; // fallback
             }
         } else {
-            nextScope = (matched.children == null) ? callsRoots : matched.children;
+            nextScope = (matched.children == null || matched.children.isEmpty()) ? callsRoots : matched.children;
         }
 
         // Recurse children
@@ -105,22 +84,91 @@ public class MergeSampleWithCalls {
 
     private Node pickMatching(List<Node> scope, Node sample) {
         if (scope == null || scope.isEmpty() || sample == null) return null;
-        // 1) Strict match by call_tree
+
+        // 1) Strict by normalized call_tree among scope level
         Node strict = pickBestBy(scope, n -> Objects.equals(n.call_tree, sample.call_tree));
         if (strict != null) return strict;
-        // 2) Fuzzy fallback: match by javaFile + javaMethod, ignoring line number
+
+
+        // 2) Fuzzy by javaFile + javaClass + javaFile_line_number
+        if (sample.javaFile_line_number != null && sample.javaFile != null) {
+            Node fuzzy2 = pickBestBy(scope, n ->
+                Objects.nonNull(n.javaFile_line_number)
+                    && Objects.equals(n.javaClass, sample.javaClass)
+                    && Objects.equals(n.javaFile, sample.javaFile)
+                    && Objects.equals(n.javaFile_line_number, sample.javaFile_line_number)
+            );
+            if (fuzzy2 != null) return fuzzy2;
+        }
+
+        // 3) Fuzzy by javaFile + javaMethod
         if (sample.javaFile != null && sample.javaMethod != null) {
             Node fuzzy = pickBestBy(scope, n -> Objects.equals(n.javaFile, sample.javaFile)
-                    && Objects.equals(n.javaMethod, sample.javaMethod));
-            if (fuzzy != null) {
-                if (!Objects.equals(fuzzy.call_tree, sample.call_tree)) {
-                    // Log warning about mismatch in call_tree (likely due to line number difference)
-                    LOG.log(Level.WARNING, () -> String.format("Fuzzy merge: call_tree mismatch (line number tolerated). sample='%s' vs calls='%s'", sample.call_tree, fuzzy.call_tree));
+                && Objects.equals(n.javaMethod, sample.javaMethod));
+            if (fuzzy != null) return fuzzy;
+        }
+
+        // 4) Strict by normalized call_tree among scope level
+        final String normSampleCt = normalizeCallTree(sample.call_tree);
+        Node non_strict = pickBestBy(scope, n -> Objects.equals(normalizeCallTree(n.call_tree), normSampleCt));
+        if (non_strict != null) return non_strict;
+
+
+        // 5) Recursive search in subtree of scope
+        Node recursive = pickBestBy(flatten(scope), n -> {
+            if (n == null) return false;
+            if (Objects.equals(n.call_tree, sample.call_tree)) return true;
+
+            boolean check2 = Objects.nonNull(n.javaFile_line_number)
+                && Objects.nonNull(n.javaFile)
+                && Objects.equals(n.javaClass, sample.javaClass)
+                && Objects.equals(n.javaFile, sample.javaFile)
+                && Objects.equals(n.javaFile_line_number, sample.javaFile_line_number);
+            if (check2) return true;
+
+            if (Objects.equals(normalizeCallTree(n.call_tree), normSampleCt)) return true;
+
+            boolean jfjm = sample.javaFile != null && sample.javaMethod != null
+                    && Objects.equals(n.javaFile, sample.javaFile)
+                    && Objects.equals(n.javaMethod, sample.javaMethod);
+            if (jfjm) return true;
+
+            boolean jcjm = sample.javaClass != null && sample.javaMethod != null
+                    && Objects.equals(n.javaClass, sample.javaClass)
+                    && Objects.equals(n.javaMethod, sample.javaMethod);
+            return jcjm;
+        });
+        return recursive;
+    }
+
+    private String normalizeCallTree(String ct) {
+        if (ct == null) return null;
+        String s = ct.trim();
+        int space = s.indexOf(' ');
+        if (space <= 0) return s; // no expected pattern
+        String left = s.substring(0, space); // file:line or file
+        String right = s.substring(space + 1).trim();
+        int colon = left.lastIndexOf(':');
+        if (colon > 0) {
+            left = left.substring(0, colon); // drop :line
+        }
+        return left + " " + right;
+    }
+
+    private List<Node> flatten(List<Node> scope) {
+        List<Node> out = new ArrayList<>();
+        Deque<Node> stack = new ArrayDeque<>();
+        for (Node n : scope) if (n != null) stack.push(n);
+        while (!stack.isEmpty()) {
+            Node n = stack.pop();
+            out.add(n);
+            if (n.children != null) {
+                for (Node ch : n.children) {
+                    if (ch != null) stack.push(ch);
                 }
-                return fuzzy;
             }
         }
-        return null;
+        return out;
     }
 
     private interface Matcher { boolean test(Node n); }
@@ -129,7 +177,7 @@ public class MergeSampleWithCalls {
         Node best = null;
         Long bestCount = null;
         for (Node n : scope) {
-            if (matcher.test(n)) {
+            if (n != null && matcher.test(n)) {
                 if (best == null) {
                     best = n;
                     bestCount = n.count;

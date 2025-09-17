@@ -165,14 +165,6 @@ public class MergeSamplingAndCountIntegrationTest {
         //assertTrue(fraction >= 0.90, "At least 80% nodes must be merged with non-null count");
 
 
-        View mergedAll = merger.doMerge(sampling, countView);
-        int totalAll = countNodes(mergedAll);
-        int mergedWithCountAll = countNodesWithCount(mergedAll);
-        double fractionAll = totalAll > 0 ? (mergedWithCountAll * 1.0) / totalAll : 0.0;
-        System.out.println("[TEST] Merged nodes with count: " + mergedWithCountAll + "/" + totalAll + " (" + String.format("%.1f", fractionAll * 100) + "%)");
-        Path tmpMergedAll = buildDir.resolve(currentTimestamp + "-merged-all.xml");
-        writeToFile(mergedAll, tmpMergedAll);
-
 //        // Cleanup temp files (best-effort)
 //        try { Files.deleteIfExists(tmpFiltered); } catch (Exception ignored) {}
 //        try { Files.deleteIfExists(tmpMerged); } catch (Exception ignored) {}
