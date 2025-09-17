@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -73,8 +74,31 @@ public class MergeSamplingAndCountIntegrationTest {
         return c;
     }
 
+    private int countNodesWithCount(View view) {
+        if (view == null || view.nodes == null) return 0;
+        int sum = 0;
+        for (Node root : view.nodes) {
+            sum += countNodesWithCount(root);
+        }
+        return sum;
+    }
+
+    private int countNodesWithCount(Node node) {
+        int c = (node.count != null) ? 1 : 0;
+        if (node.children != null) {
+            for (Node ch : node.children) c += countNodesWithCount(ch);
+        }
+        return c;
+    }
+
     @Test
     public void fullPipeline_sampling_filter_merge_calculate_and_serialize() throws Exception {
+        // Build directory for temp files under project root
+        Path buildDir = Paths.get(System.getProperty("user.dir"))
+                .resolve("yourkit-convertor")
+                .resolve("build")
+                .resolve("test-artifacts");
+        Files.createDirectories(buildDir);
         // 1) Load sampling view
         View sampling = readFromClasspath("/sampling/Call-tree-all-threads-merged-WEB.xml");
         assertNotNull(sampling);
@@ -86,8 +110,8 @@ public class MergeSamplingAndCountIntegrationTest {
         View filteredSampling = filter.doFilter(sampling, 10.0);
         assertNotNull(filteredSampling);
 
-        // 3) Serialize filtered to file
-        Path tmpFiltered = Files.createTempFile("filtered-sampling-", ".xml");
+        // 3) Serialize filtered to file (under build)
+        Path tmpFiltered = buildDir.resolve("filtered-sampling.xml");
         writeToFile(filteredSampling, tmpFiltered);
         System.out.println("[TEST] Filtered sampling written to: " + tmpFiltered.toAbsolutePath());
         assertTrue(Files.exists(tmpFiltered));
@@ -103,10 +127,10 @@ public class MergeSamplingAndCountIntegrationTest {
 
         // 5.1) Filter
         Filter filterCount = new FilterSamplingByTimePercent();
-        View filteredCountView = filterCount.doFilter(countView, 5.0);
-        Path tmpFilteredCount = Files.createTempFile("filtered-counting-", ".xml");
+        View filteredCountView = filterCount.doFilter(countView, 1.0);
+        Path tmpFilteredCount = buildDir.resolve("filtered-counting.xml");
         writeToFile(filteredCountView, tmpFilteredCount);
-        System.out.println("[TEST] Filtered sampling written to: " + tmpFilteredCount.toAbsolutePath());
+        System.out.println("[TEST] Filtered counting written to: " + tmpFilteredCount.toAbsolutePath());
         assertTrue(Files.exists(tmpFilteredCount));
 
 
@@ -120,7 +144,7 @@ public class MergeSamplingAndCountIntegrationTest {
         new SamplingFieldsCalculator().doCacculate(merged);
 
         // 8) Save final result
-        Path tmpMerged = Files.createTempFile("merged-", ".xml");
+        Path tmpMerged = buildDir.resolve("merged.xml");
         writeToFile(merged, tmpMerged);
         System.out.println("[TEST] Merged view written to: " + tmpMerged.toAbsolutePath());
         assertTrue(Files.exists(tmpMerged));
@@ -129,6 +153,13 @@ public class MergeSamplingAndCountIntegrationTest {
         View mergedBack = readFromFile(tmpMerged);
         assertNotNull(mergedBack);
         assertTrue(countNodes(mergedBack) > 0);
+
+        // 9) Compute merged fraction (nodes with non-null count)
+        int total = countNodes(mergedBack);
+        int mergedWithCount = countNodesWithCount(mergedBack);
+        double fraction = total > 0 ? (mergedWithCount * 1.0) / total : 0.0;
+        System.out.println("[TEST] Merged nodes with count: " + mergedWithCount + "/" + total + " (" + String.format("%.1f", fraction * 100) + "%)");
+        assertTrue(fraction >= 0.80, "At least 80% nodes must be merged with non-null count");
 
 //        // Cleanup temp files (best-effort)
 //        try { Files.deleteIfExists(tmpFiltered); } catch (Exception ignored) {}
