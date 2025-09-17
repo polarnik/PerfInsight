@@ -1,6 +1,7 @@
 package com.jetbrains.perfinsight.yk.model;
 
 import jakarta.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class Node {
     public String call_tree;
 
     @XmlAttribute(name = "time_ms")
-    public Long time_ms;
+    public Double time_ms;
 
     @XmlAttribute(name = "samples")
     public Long samples;
@@ -24,11 +25,13 @@ public class Node {
      * the multiplicator is 100 * 90 / 100 = 90.0.
      */
     @XmlAttribute(name = "samples_percent")
+    @jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter(DoubleLenientAdapter.class)
     public Double samples_percent;
 
 
     @XmlAttribute(name = "avg_time_ms")
-    public Long avg_time_ms;
+    @XmlJavaTypeAdapter(DoubleLenientAdapter.class)
+    public Double avg_time_ms;
 
     @XmlAttribute(name = "count")
     public Long count;
