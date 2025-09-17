@@ -1,5 +1,6 @@
 package com.jetbrains.perfinsight.yk.model;
 
+import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.annotation.*;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class Node {
     /**
      * @example javaFile_line_number=242
      */
-    @XmlAttribute(name = "call_tree")
+    @XmlAttribute(name = "javaFile_line_number")
     public Long javaFile_line_number;
 
     /**
@@ -78,4 +79,54 @@ public class Node {
     public List<Node> children = new ArrayList<>();
 
     public Node() {}
+
+    void afterUnmarshal(Unmarshaller u, Object parent) {
+        parseCallTree();
+    }
+
+    private void parseCallTree() {
+        if (call_tree == null || call_tree.isEmpty()) {
+            return;
+        }
+        // Expected format: "<file>:<line> <fqcn>.<method>(...)"
+        String s = call_tree.trim();
+        // Split file/line and the rest by first space
+        int spaceIdx = s.indexOf(' ');
+        String left = s;
+        String right = null;
+        if (spaceIdx > 0) {
+            left = s.substring(0, spaceIdx);
+            right = s.substring(spaceIdx + 1).trim();
+        }
+        // left part: file:line or just file
+        String file = left;
+        Long lineNum = null;
+        int colonIdx = left.lastIndexOf(':');
+        if (colonIdx > -1) {
+            file = left.substring(0, colonIdx);
+            String lineStr = left.substring(colonIdx + 1).trim();
+            try {
+                if (!lineStr.isEmpty()) {
+                    lineNum = Long.parseLong(lineStr);
+                }
+            } catch (NumberFormatException ignore) {
+                // keep null if not a number
+            }
+        }
+        if (file != null && !file.isEmpty()) {
+            this.javaFile = file;
+        }
+        this.javaFile_line_number = lineNum;
+
+        if (right != null && !right.isEmpty()) {
+            this.javaMethod = right;
+            // extract class before last '.' preceding '(' if present
+            int parenIdx = right.indexOf('(');
+            String beforeArgs = parenIdx >= 0 ? right.substring(0, parenIdx) : right;
+            int lastDot = beforeArgs.lastIndexOf('.');
+            if (lastDot > 0) {
+                this.javaClass = beforeArgs.substring(0, lastDot);
+            }
+        }
+    }
 }
