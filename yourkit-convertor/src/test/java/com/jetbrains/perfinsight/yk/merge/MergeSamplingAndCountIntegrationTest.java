@@ -4,6 +4,7 @@ import com.jetbrains.perfinsight.yk.calculate.CountingFieldsCalculator;
 import com.jetbrains.perfinsight.yk.calculate.SamplingFieldsCalculator;
 import com.jetbrains.perfinsight.yk.filter.Filter;
 import com.jetbrains.perfinsight.yk.filter.FilterSampingBySamplesPercent;
+import com.jetbrains.perfinsight.yk.filter.FilterSamplingByTimePercent;
 import com.jetbrains.perfinsight.yk.model.Node;
 import com.jetbrains.perfinsight.yk.model.View;
 import jakarta.xml.bind.JAXBContext;
@@ -100,9 +101,18 @@ public class MergeSamplingAndCountIntegrationTest {
         View countView = readFromClasspath("/count/Call-tree-all-threads-merged-WEB.xml");
         assertNotNull(countView);
 
+        // 5.1) Filter
+        Filter filterCount = new FilterSamplingByTimePercent();
+        View filteredCountView = filterCount.doFilter(countView, 5.0);
+        Path tmpFilteredCount = Files.createTempFile("filtered-counting-", ".xml");
+        writeToFile(filteredCountView, tmpFilteredCount);
+        System.out.println("[TEST] Filtered sampling written to: " + tmpFilteredCount.toAbsolutePath());
+        assertTrue(Files.exists(tmpFilteredCount));
+
+
         // 6) Merge sampling and count
         MergeSampleWithCalls merger = new MergeSampleWithCalls();
-        View merged = merger.doMerge(filteredBack, countView);
+        View merged = merger.doMerge(filteredBack, filteredCountView);
         assertNotNull(merged);
 
         // 7) Apply calculators
