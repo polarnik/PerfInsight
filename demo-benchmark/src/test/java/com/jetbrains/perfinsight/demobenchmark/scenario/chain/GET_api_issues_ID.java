@@ -10,8 +10,23 @@ import static io.gatling.javaapi.core.CoreDsl.*;
 import static io.gatling.javaapi.http.HttpDsl.http;
 
 /**
- * The link: https://youtrack.logs.aws.intellij.net/_dashboards/app/dashboards#/view/2be4b2a0-58f7-11f0-a924-81b0865f61d1?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:'2025-09-01T06:00:00.000Z',to:'2025-09-03T21:00:00.000Z'))&_a=(description:'',filters:!(('$state':(store:appState),meta:(alias:'GET%20%2Fapi%2Fissues%2F%7BID%7D',disabled:!f,index:b6720360-d19d-11ee-ba2b-517929de00b6,key:query,negate:!f,type:custom,value:'%7B%22bool%22:%7B%22must%22:%5B%7B%22query_string%22:%7B%22query%22:%22request_method.keyword:GET%20AND%20uri.keyword:%2F%5C%5C%2Fapi%5C%5C%2Fissues%5C%5C%2F%5B%5E%5C%5C%2F%5D%2B%2F%22,%22analyze_wildcard%22:true,%22time_zone%22:%22UTC%22%7D%7D%5D,%22filter%22:%5B%5D,%22should%22:%5B%5D,%22must_not%22:%5B%5D%7D%7D'),query:(bool:(filter:!(),must:!((query_string:(analyze_wildcard:!t,query:'request_method.keyword:GET%20AND%20uri.keyword:%2F%5C%2Fapi%5C%2Fissues%5C%2F%5B%5E%5C%2F%5D%2B%2F',time_zone:UTC))),must_not:!(),should:!()))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b6720360-d19d-11ee-ba2b-517929de00b6,key:http_user_agent.keyword,negate:!f,params:(query:'Mozilla%2F5.0%20(Macintosh;%20Intel%20Mac%20OS%20X%2010_15_7)%20AppleWebKit%2F537.36%20(KHTML,%20like%20Gecko)%20Chrome%2F139.0.0.0%20Safari%2F537.36'),type:phrase),query:(match_phrase:(http_user_agent.keyword:'Mozilla%2F5.0%20(Macintosh;%20Intel%20Mac%20OS%20X%2010_15_7)%20AppleWebKit%2F537.36%20(KHTML,%20like%20Gecko)%20Chrome%2F139.0.0.0%20Safari%2F537.36')))),fullScreenMode:!f,options:(hidePanelTitles:!f,useMargins:!t),query:(language:lucene,query:''),timeRestore:!t,title:'YouTrack%20Production%20Nginx%20Access%20Log%20Metrics%20by%20URL%20Templates',viewMode:view)
+ * Returns a ChainBuilder that simulates the production distribution of GET /api/issues/{ID} API calls.
+ * The distribution is based on actual usage patterns from production logs, where each variant represents
+ * a different combination of query parameters and authentication states.
  *
+ * The percentage distribution is as follows:
+ * - 23.91% - Authenticated requests with full fields set (TOP-1)
+ * - 14.99% - Guest requests with full fields set (TOP-1 guest)
+ * - 14.43% - Authenticated requests with custom fields for Priority (TOP-3)
+ * - 14.38% - Authenticated requests with draft comment fields (TOP-4)
+ * - 12.64% - Guest requests with draft comment fields (TOP-4 guest)
+ * - 12.64% - Guest requests with custom fields for Priority (TOP-3 guest)
+ * - 2.59% - Authenticated requests with empty referring query (TOP-7)
+ * - 0.16% - Guest requests with empty referring query (TOP-7 guest)
+ * - 3.00% - Authenticated requests with specific referring query (TOP-8)
+ * - 0.50% - Guest requests with specific referring query (TOP-8 guest)
+ *
+ * @return ChainBuilder configured with the production-like distribution of API calls
  */
 public class GET_api_issues_ID {
     public ChainBuilder build() {
@@ -27,7 +42,6 @@ public class GET_api_issues_ID {
                 ))
 
         );
-        ;
 
         ChainBuilder getIssue_top2_1499 = group("TOP-1 guest").on(
             http("GET /api/issues/{ID}")
@@ -110,8 +124,6 @@ public class GET_api_issues_ID {
                     Map.entry("fields", top1_fields),
                     Map.entry("isGuest", true)
                 )));
-
-
 
         return group("GET /api/issues/{ID}").on(CoreDsl.randomSwitch().on(
                 percent(100.0 * 2391 / 10000).then(getIssue_top1_2391),
