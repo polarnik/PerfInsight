@@ -8,8 +8,35 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Node {
     // attributes of <node>
+    /**
+     * @example call_tree="WriterInterceptorExecutor.java:242 jetbrains.gap.resource.pojo.GapFilteringJsonProvider.writeTo(Object, Class, Type, Annotation[], MediaType, MultivaluedMap, OutputStream)"
+     */
     @XmlAttribute(name = "call_tree")
     public String call_tree;
+
+    /**
+     * @example javaFile="WriterInterceptorExecutor.java"
+     */
+    @XmlAttribute(name = "javaFile")
+    public String javaFile;
+
+    /**
+     * @example javaFile_line_number=242
+     */
+    @XmlAttribute(name = "call_tree")
+    public Long javaFile_line_number;
+
+    /**
+     * @example javaMethod="jetbrains.gap.resource.pojo.GapFilteringJsonProvider.writeTo(Object, Class, Type, Annotation[], MediaType, MultivaluedMap, OutputStream)"
+     */
+    @XmlAttribute(name = "javaMethod")
+    public String javaMethod;
+
+    /**
+     * @example javaClass="jetbrains.gap.resource.pojo.GapFilteringJsonProvider"
+     */
+    @XmlAttribute(name = "javaClass")
+    public String javaClass;
 
     @XmlAttribute(name = "time_ms")
     public Double time_ms;
