@@ -67,8 +67,32 @@ public class MergeSampleWithCalls {
         Node matched = pickMatching(scope, sample);
         merged.count = (matched == null) ? null : matched.count;
 
-        // Determine next scope: children of matched calls node; if no match, restart from calls roots
-        List<Node> nextScope = (matched == null || matched.children == null) ? callsRoots : matched.children;
+        // Determine next scope: children of matched calls node; if no match, consider skip-level fuzzy or restart from calls roots
+        List<Node> nextScope;
+        boolean skippedLevel = false;
+        if (matched == null) {
+            // New fuzzy level: Sampling may have an extra intermediate node that's absent in Counting.
+            // If any child of the current sampling node matches something in the current scope,
+            // we keep the current scope for children (skip this level) and log a WARN.
+            Node childMatch = null;
+            if (sample.children != null) {
+                for (Node ch : sample.children) {
+                    childMatch = pickMatching(scope, ch);
+                    if (childMatch != null) break;
+                }
+            }
+            if (childMatch != null) {
+                skippedLevel = true;
+                nextScope = scope; // don't narrow the scope; effectively skip this level
+                final String sampleCt = sample.call_tree;
+                final String childCt = childMatch.call_tree;
+                LOG.log(Level.WARNING, () -> String.format("Skip-level merge: sampling node without counterpart is bypassed. sampling='%s'; first child matched in calls as '%s'", sampleCt, childCt));
+            } else {
+                nextScope = callsRoots; // original fallback behavior
+            }
+        } else {
+            nextScope = (matched.children == null) ? callsRoots : matched.children;
+        }
 
         // Recurse children
         if (sample.children != null) {
