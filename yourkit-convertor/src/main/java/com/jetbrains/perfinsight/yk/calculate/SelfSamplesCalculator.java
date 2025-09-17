@@ -41,6 +41,7 @@ public class SelfSamplesCalculator implements Calculator {
             }
             long diff = node.samples - sumChildrenSamples;
             node.self_samples = Math.max(0L, diff);
+            node.self_samples_percent = node.samples == 0 ? 0.0 : 100.0 * node.self_samples / node.samples;
         }
 
         // Compute self_time_ms
@@ -56,6 +57,7 @@ public class SelfSamplesCalculator implements Calculator {
             double diff = node.time_ms - sumChildrenTime;
             // clamp tiny negative due to float errors and never negative overall
             node.self_time_ms = diff <= 0 ? 0.0 : diff;
+            node.self_time_percent = node.time_ms == 0 ? 0.0 : 100.0 * node.self_time_ms / node.time_ms;
         }
     }
 }

@@ -45,11 +45,17 @@ public class Node {
     @XmlAttribute(name = "self_time_ms")
     public Double self_time_ms;
 
+    @XmlAttribute(name = "self_time_percent")
+    public Double self_time_percent;
+
     @XmlAttribute(name = "samples")
     public Long samples;
 
     @XmlAttribute(name = "self_samples")
     public Long self_samples;
+
+    @XmlAttribute(name = "self_samples_percent")
+    public Double self_samples_percent;
 
     /**
      * There is a relation:
