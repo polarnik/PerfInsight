@@ -1,6 +1,8 @@
 <view description="Call tree (all threads merged)">
   <node call_tree="GapRestServlet.kt:85 org.glassfish.jersey.servlet.WebComponent.service(URI, URI, HttpServletRequest, HttpServletResponse)" time_ms="635032" avg_time_ms="5879" count="108">
     <node call_tree="WebComponent.java:346 org.glassfish.jersey.servlet.WebComponent.serviceImpl(URI, URI, HttpServletRequest, HttpServletResponse)" time_ms="635032" avg_time_ms="5879" count="108">
+      <node call_tree="WebComponent.java:1000 org.glassfish.jersey.servlet.WebComponent.serviceImpl(URI)" time_ms="635032" avg_time_ms="587" count="1080">
+      </node>
     </node>
   </node>
 </view>

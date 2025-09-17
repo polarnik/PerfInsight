@@ -24,13 +24,13 @@ public class Node {
 
     /**
      * There is a relation:
-     * 100.0 * (count field of current node) / (count field of parent node).
+     * (count field of current node) / (count field of parent node).
      *
      * For example, the parent count is 100, the current count is 1000,
-     * the multiplicator is 100.0 * 1000 / 100 = 10,000.
+     * the multiplicator is 1000 / 100 = 10.0.
      */
-    @XmlAttribute(name = "count_multiplicator_percent")
-    public Double count_multiplicator_percent;
+    @XmlAttribute(name = "count_multiplicator")
+    public Double count_multiplicator;
 
     // child <node> elements (0..n)
     @XmlElement(name = "node")
