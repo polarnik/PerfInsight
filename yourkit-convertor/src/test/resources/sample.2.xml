@@ -1,0 +1,12 @@
+<view description="Call tree (all threads merged)">
+  <node call_tree="GapRestServlet.kt:85 org.glassfish.jersey.servlet.WebComponent.service(URI, URI, HttpServletRequest, HttpServletResponse)" time_ms="608591" samples="32671">
+    <node call_tree="WebComponent.java:346 org.glassfish.jersey.servlet.WebComponent.serviceImpl(URI, URI, HttpServletRequest, HttpServletResponse)" time_ms="608591" samples="32671">
+      <node call_tree="WebComponent.java:394 org.glassfish.jersey.server.ApplicationHandler.handle(ContainerRequest)" time_ms="608577" samples="10">
+        <node call_tree="ApplicationHandler.java:684 org.glassfish.jersey.server.ServerRuntime.process(ContainerRequest)" time_ms="608575" samples="10">
+          <node call_tree="ServerRuntime.java:234 org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestContext, Runnable)" time_ms="608563" samples="10">
+          </node>
+        </node>
+      </node>
+    </node>
+  </node>
+</view>
