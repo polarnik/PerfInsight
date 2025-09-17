@@ -50,6 +50,11 @@ public class MergeSampleWithCalls {
         Node merged = new Node();
         // copy sampling fields
         merged.call_tree = sample.call_tree;
+        // copy parsed java location/method info
+        merged.javaFile = sample.javaFile;
+        merged.javaFile_line_number = sample.javaFile_line_number;
+        merged.javaMethod = sample.javaMethod;
+        merged.javaClass = sample.javaClass;
         merged.time_ms = sample.time_ms;
         merged.samples = sample.samples;
         merged.samples_percent = sample.samples_percent;
