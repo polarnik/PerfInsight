@@ -43,3 +43,5 @@ Thumbs.db
 # Project
 /.env
 /demo-benchmark/build/
+/demo-yourkit-convertor/build/
+/demo-yourkit-convertor/*.snapshot
