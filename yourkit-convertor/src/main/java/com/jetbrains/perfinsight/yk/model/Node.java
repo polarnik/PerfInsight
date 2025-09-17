@@ -16,6 +16,17 @@ public class Node {
     @XmlAttribute(name = "samples")
     public Long samples;
 
+    /**
+     * There is a relation:
+     * 100 * (samples field of current node) / (samples field of parent node).
+     *
+     * For example, the parent count is 100, the current count is 90,
+     * the multiplicator is 100 * 90 / 100 = 90.0.
+     */
+    @XmlAttribute(name = "samples_percent")
+    public Double samples_percent;
+
+
     @XmlAttribute(name = "avg_time_ms")
     public Long avg_time_ms;
 
