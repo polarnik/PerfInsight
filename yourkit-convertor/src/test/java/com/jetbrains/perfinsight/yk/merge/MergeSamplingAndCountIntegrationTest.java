@@ -82,7 +82,7 @@ public class MergeSamplingAndCountIntegrationTest {
 
         // 2) Apply filter 1%
         Filter filter = new FilterSampingBySamplesPercent();
-        View filteredSampling = filter.doFilter(sampling, 1.0);
+        View filteredSampling = filter.doFilter(sampling, 10.0);
         assertNotNull(filteredSampling);
 
         // 3) Serialize filtered to file
