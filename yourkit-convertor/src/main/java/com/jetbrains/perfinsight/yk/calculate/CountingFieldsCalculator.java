@@ -18,29 +18,28 @@ public class CountingFieldsCalculator implements Calculator{
     public View doCacculate(View view) {
         if (view == null || view.nodes == null) return view;
         for (Node root : view.nodes) {
-            apply(root, null);
+            apply(root, root);
         }
         return view;
     }
 
-    private void apply(Node node, Node parent) {
+    private void apply(Node node, Node root) {
         if (node == null) return;
 
         // Compute multiplicator according to the rules
         if (node.count == null) {
             node.count_multiplicator = null;
-        } else if (parent == null) {
-            node.count_multiplicator = 1.0;
-        } else if (parent.count == null || parent.count == 0L) {
+
+        } else if (root.count == null || root.count == 0L) {
             node.count_multiplicator = null;
         } else {
-            node.count_multiplicator = node.count.doubleValue() / parent.count.doubleValue();
+            node.count_multiplicator = node.count.doubleValue() / root.count.doubleValue();
         }
 
         // Recurse into children
         if (node.children != null) {
             for (Node ch : node.children) {
-                apply(ch, node);
+                apply(ch, root);
             }
         }
     }
