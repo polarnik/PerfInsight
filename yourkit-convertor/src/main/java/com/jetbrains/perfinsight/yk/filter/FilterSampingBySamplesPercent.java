@@ -42,6 +42,11 @@ public class FilterSampingBySamplesPercent implements Filter {
 
         Node copy = new Node();
         copy.call_tree = node.call_tree;
+        // copy parsed java location/method info
+        copy.javaFile = node.javaFile;
+        copy.javaFile_line_number = node.javaFile_line_number;
+        copy.javaMethod = node.javaMethod;
+        copy.javaClass = node.javaClass;
         copy.time_ms = node.time_ms;
         copy.samples = node.samples;
         copy.avg_time_ms = node.avg_time_ms;
