@@ -5,6 +5,7 @@ rootProject.name = 'PerfInsight'
 include(
   ":core",
   ":yourkit-convertor",
+  ":demo-yourkit-convertor",
   ":cli",
   ":demo-benchmark",
   ":demo-service",

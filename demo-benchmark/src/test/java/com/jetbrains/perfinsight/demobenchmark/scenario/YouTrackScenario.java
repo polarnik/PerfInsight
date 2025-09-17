@@ -104,10 +104,10 @@ public class YouTrackScenario {
 
     public PopulationBuilder get_api_issues_50_rps() {
         return get_api_issues_Scenario()
-            .injectOpen(CoreDsl.constantUsersPerSec(20).during(Duration.ofMinutes(1)))
+            .injectOpen(CoreDsl.constantUsersPerSec(20).during(Duration.ofMinutes(10)))
             .throttle(
                 reachRps(50).in(10),
-                holdFor(Duration.ofMinutes(1 + 1))
+                holdFor(Duration.ofMinutes(10 + 1))
             )
             .protocols(protocolBuilders.build())
             ;

@@ -59,8 +59,7 @@ public class PerformanceTest {
         System.setProperty("gatling.charting.indicators.lowerBound", "500");
         System.setProperty("gatling.charting.indicators.higherBound", "1000");
         System.setProperty("youtrackUserId_token_path", "data/USER_TOKEN_WITH_TASKS.csv");
-        System.setProperty("proxy_host", "172.31.18.225");
-        System.setProperty("proxy_port", "3128");
+
 
         Logger root = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         root.setLevel(Level.INFO);

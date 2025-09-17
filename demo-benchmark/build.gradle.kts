@@ -20,7 +20,7 @@ dependencies {
   compileOnly("org.projectlombok:lombok:1.18.36")
   implementation("org.slf4j:slf4j-api:2.0.16")
   implementation("org.slf4j:slf4j-ext:2.0.9")
-  testImplementation("org.testcontainers:testcontainers:1.21.0")
+  testImplementation("org.testcontainers:testcontainers:1.21.3")
 }
 
 tasks.test {
