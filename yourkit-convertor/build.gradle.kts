@@ -15,6 +15,9 @@ dependencies {
   testImplementation("ch.qos.logback:logback-classic:1.5.17")
   implementation("org.slf4j:slf4j-api:2.0.16")
   implementation("org.slf4j:slf4j-ext:2.0.9")
+  // JAXB API and runtime for XML binding
+  implementation("jakarta.xml.bind:jakarta.xml.bind-api:4.0.2")
+  runtimeOnly("org.glassfish.jaxb:jaxb-runtime:4.0.5")
   testImplementation("org.testcontainers:testcontainers:1.21.3")
 }
 
