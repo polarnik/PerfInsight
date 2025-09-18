@@ -65,11 +65,11 @@ PerfInsight automates the following steps:
 From 220 MiByte compressed StackTraces to one clear performance improvement suggestions.
 
 1. Junit and Gatling send requests, see the module **demo-benchmark**
-   2. `gradlew :demo-benchmark:test --tests "com.jetbrains.perfinsight.demobenchmark.PerformanceTest.GET_api_issues_50_rps"`
-   3. `gradlew :demo-benchmark:test --tests "com.jetbrains.perfinsight.demobenchmark.PerformanceTest.GET_api_issues_100_calls"`
+   2. `./gradlew :demo-benchmark:test --tests com.jetbrains.perfinsight.demobenchmark.PerformanceTest.GET_api_issues_50_rps`
+   3. `./gradlew :demo-benchmark:test --tests com.jetbrains.perfinsight.demobenchmark.PerformanceTest.GET_api_issues_100_calls`
 1. YourKit API: get performance snapshots with sampling and method counting metrics.
 2. Convert the snapshots into the XML format. See the module **demo-yourkit-convertor**
-3. Merge and distill snapshots via the module **yourkit-convertor**: `gradlew :yourkit-convertor:test --tests "com.jetbrains.perfinsight.yk.merge.MergeSamplingAndCountIntegrationTest.fullPipeline_sampling_filter_merge_calculate_and_serialize"`
+3. Merge and distill snapshots via the module **yourkit-convertor**: `./gradlew :yourkit-convertor:test --tests com.jetbrains.perfinsight.yk.merge.MergeSamplingAndCountIntegrationTest.fullPipeline_sampling_filter_merge_calculate_and_serialize`
 4. Generage the Performance Problem descriptions. See the module **adviser**
 
 There is a result:
