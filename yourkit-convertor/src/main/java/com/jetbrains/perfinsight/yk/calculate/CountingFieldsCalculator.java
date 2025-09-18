@@ -39,7 +39,7 @@ public class CountingFieldsCalculator implements Calculator{
         // Recurse into children
         if (node.children != null) {
             for (Node ch : node.children) {
-                apply(ch, root);
+                apply(ch, node);
             }
         }
     }

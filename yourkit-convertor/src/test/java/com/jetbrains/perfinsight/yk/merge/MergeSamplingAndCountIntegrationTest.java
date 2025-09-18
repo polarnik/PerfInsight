@@ -9,7 +9,9 @@ import com.jetbrains.perfinsight.yk.filter.Filter;
 import com.jetbrains.perfinsight.yk.filter.FilterSampingBySamplesPercent;
 import com.jetbrains.perfinsight.yk.filter.FilterSamplingByTimePercent;
 import com.jetbrains.perfinsight.yk.model.Node;
+import com.jetbrains.perfinsight.yk.model.StackTrace;
 import com.jetbrains.perfinsight.yk.model.View;
+import com.jetbrains.perfinsight.yk.split.StackTraceSplitter;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
@@ -21,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -191,6 +194,11 @@ public class MergeSamplingAndCountIntegrationTest {
         System.out.println("[TEST] Merged nodes with count: " + mergedWithCount + "/" + total + " (" + String.format("%.1f", fraction * 100) + "%)");
         //assertTrue(fraction >= 0.90, "At least 80% nodes must be merged with non-null count");
 
+        List<List<Node>> stack_traces = new StackTraceSplitter().split(merged);
+        System.out.println(stack_traces.size());
+
+        List< StackTrace> stack_traces2 = new StackTraceSplitter().getStackTraces(merged);
+        System.out.println(stack_traces2.size());
 
 //        // Cleanup temp files (best-effort)
 //        try { Files.deleteIfExists(tmpFiltered); } catch (Exception ignored) {}

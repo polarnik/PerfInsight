@@ -54,6 +54,7 @@ public class MergeSampleWithCalls {
         // find corresponding count node within the current scope (and its subtree)
         Node matched = pickMatching(scope, sample);
         merged.count = (matched == null) ? null : matched.count;
+        merged.avg_time_ms = (matched == null) ? null : matched.avg_time_ms;
 
         // Next scope: children of matched node if any; otherwise try to keep scope if children can match; else restart from roots
         List<Node> nextScope;
