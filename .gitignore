@@ -46,3 +46,4 @@ Thumbs.db
 /demo-yourkit-convertor/build/
 /demo-yourkit-convertor/*.snapshot
 /yourkit-convertor/build/
+/adviser/build/
