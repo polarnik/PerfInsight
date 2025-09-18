@@ -25,4 +25,11 @@ dependencies {
 
 tasks.test {
   useJUnitPlatform()
+  // Allow deep XML trees from YourKit exports
+  jvmArgs("-Djdk.xml.maxElementDepth=1000")
+}
+
+// Ensure any JavaExec tasks (if added in this module) also inherit the XML depth setting
+tasks.withType<JavaExec>().configureEach {
+  jvmArgs("-Djdk.xml.maxElementDepth=1000")
 }
