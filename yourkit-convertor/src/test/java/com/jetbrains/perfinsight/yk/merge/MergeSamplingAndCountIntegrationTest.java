@@ -8,9 +8,11 @@ import com.jetbrains.perfinsight.yk.calculate.SelfSamplesCalculator;
 import com.jetbrains.perfinsight.yk.filter.Filter;
 import com.jetbrains.perfinsight.yk.filter.FilterSampingBySamplesPercent;
 import com.jetbrains.perfinsight.yk.filter.FilterSamplingByTimePercent;
+import com.jetbrains.perfinsight.yk.filter.StackTraceFilter;
 import com.jetbrains.perfinsight.yk.model.Node;
 import com.jetbrains.perfinsight.yk.model.StackTrace;
 import com.jetbrains.perfinsight.yk.model.View;
+import com.jetbrains.perfinsight.yk.printer.StackTraceToCode;
 import com.jetbrains.perfinsight.yk.split.StackTraceSplitter;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
@@ -197,8 +199,13 @@ public class MergeSamplingAndCountIntegrationTest {
         List<List<Node>> stack_traces = new StackTraceSplitter().split(merged);
         System.out.println(stack_traces.size());
 
-        List< StackTrace> stack_traces2 = new StackTraceSplitter().getStackTraces(merged);
-        System.out.println(stack_traces2.size());
+        List<StackTrace> stack_traces2 = new StackTraceSplitter().getStackTraces(merged);
+        List<StackTrace> stack_traces3 = new StackTraceFilter().doFilter(stack_traces2, 0.5, 1.5);
+        System.out.println(stack_traces3.size());
+
+        for(int i = 0; i < stack_traces3.size() && i < 3; i++) {
+            System.out.println(new StackTraceToCode().toCode(stack_traces3.get(i)));
+        }
 
 //        // Cleanup temp files (best-effort)
 //        try { Files.deleteIfExists(tmpFiltered); } catch (Exception ignored) {}
