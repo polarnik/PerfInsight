@@ -1,37 +1,37 @@
 # PerfInsight
 [HKTN25-30](https://youtrack.jetbrains.com/issue/HKTN25-30/PerfInsight-tool-for-JVM-Profiles) 🔬 PerfInsight tool for JVM Profiles
 
-Our tool speeds up performance optimization and reduces time consuming tasks for senior developers.
-It distills all valuable information, extracts profile data, aligns the data with the source code, and then generates ai suggestions for optimal usage to fix bottlenecks.
+Our tool speeds up performance optimization and reduces time-consuming tasks for senior developers.
+It distills all valuable information, extracts profile data, aligns the data with the source code, and then generates AI suggestions for optimal usage to fix bottlenecks.
 Our team has resolved 200+ performance issues manually and now we have automated this process completely.
 
-We would love to help you as well
+We would love to help you as well.
 
 # Problem
 
 AI Agent Junie can work as a static code analyzer:
-- summarize a source code
+- summarize the source code
 - find patterns and anti-patterns
 
-but it cannot work with profiling data like:
+However, it cannot work with profiling data such as:
 - JFR files
 - async-profiler files
 - YourKit profiler files
 
-because the files are too large
+This is because these files are too large.
 
 # Solution
 
-We can create a pipeline and a set of tools for preparation and extraction performance context about the source code:
+We can create a pipeline and a set of tools to prepare and extract performance context from the source code:
 
 0. ⚙️ Start benchmarks
 1. ⚙️ Collect performance profiles
-2. 🔬 Analyze Profiles
+2. 🔬 Analyze profiles
     * Extract thread pools from profile results
     * Extract slow functions from profile results
-    * Get system version info
+    * Get system version information
     * Get source code for the slow classes and methods
-3. 🔮 Find performance antipatterns in the selected source code
+3. 🔮 Find performance anti-patterns in the selected source code
 4. 🔮 Generate suggestions for improving performance
 5. 🔁 Revalidate
 
@@ -44,14 +44,14 @@ PerfInsight automates the following steps:
 - generate performance problem descriptions
 - generate performance problem suggestions
 
-From 30 MiByte compressed StackTraces to two clear performance improvement suggestions.
+From 30 MiB compressed stack traces to two clear performance improvement suggestions.
 
-1. YourKit API: get performance snapshots without and with degradation. See attachments from the issue [JT-91297](https://youtrack.jetbrains.com/issue/JT-91297/Investigate-performance-impact-of-search-features-computation?backToIssues=false) Investigate performance impact of search features computation
+1. YourKit API: get performance snapshots with and without degradation. See attachments from the issue [JT-91297](https://youtrack.jetbrains.com/issue/JT-91297/Investigate-performance-impact-of-search-features-computation?backToIssues=false) — Investigate performance impact of search features computation
 2. Convert the snapshots to the CSV format. See the module **demo-yourkit-convertor**
 3. Compare snapshots via the module **core**: `java -jar perfinsight.jar <baseline-csv-file> <degradation-csv-file>`, see the module **snapshot-analyzer**
-4. The **core** module will generage the Performance Problem descriptions in the Markdown format via the AI Agent. See the module **adviser**
+4. The **core** module will generate the Performance Problem descriptions in Markdown via the AI Agent. See the module **adviser**
 
-There are results:
+Here are the results:
 - [JT-91664](https://youtrack.jetbrains.com/issue/JT-91664/Performance-Optimization-Suggestions-for-getFeatures) Performance Optimization Suggestions for getFeatures
 - [JT-91662](https://youtrack.jetbrains.com/issue/JT-91662/Performance-Analysis-and-Suggestions-for-buildIssueTree) Performance Analysis and Suggestions for buildIssueTree
 
@@ -62,23 +62,23 @@ PerfInsight automates the following steps:
 - generate performance problem descriptions
 - generate performance problem suggestions
 
-From 220 MiByte compressed StackTraces to one clear performance improvement suggestions.
+From 220 MiB compressed stack traces to one clear performance improvement suggestion.
 
-1. Junit and Gatling send requests, see the module **demo-benchmark**
+1. JUnit and Gatling send requests; see the module **demo-benchmark**
    2. `./gradlew :demo-benchmark:test --tests com.jetbrains.perfinsight.demobenchmark.PerformanceTest.GET_api_issues_50_rps`
    3. `./gradlew :demo-benchmark:test --tests com.jetbrains.perfinsight.demobenchmark.PerformanceTest.GET_api_issues_100_calls`
 1. YourKit API: get performance snapshots with sampling and method counting metrics.
 2. Convert the snapshots into the XML format. See the module **demo-yourkit-convertor**
 3. Merge and distill snapshots via the module **yourkit-convertor**: `./gradlew :yourkit-convertor:test --tests com.jetbrains.perfinsight.yk.merge.MergeSamplingAndCountIntegrationTest.fullPipeline_sampling_filter_merge_calculate_and_serialize`
-4. Generage the Performance Problem descriptions. See the module **adviser**
+4. Generate the Performance Problem descriptions. See the module **adviser**
 
-There is a result:
+Here is the result:
 - [JT-91665](https://youtrack.jetbrains.com/issue/JT-91665/Serialization-Performance-Bottleneck-Due-to-Inflexible-Pagination-Logic) Serialization Performance Bottleneck Due to Inflexible Pagination Logic
 
 ## Stack Trace Format
 
-The stack trace format is based on JVM Stack Traces with additional information:
-- Performance metrics about the whole StackTrace:
+The stack trace format is based on JVM stack traces with additional information:
+- Performance metrics about the entire stack trace:
   - example: `Performance Problem with 5216 samples and 100478.0 ms`
 - Performance metrics about the current line:
   - example: `time: 2.120882241575161%	loop: 28333.333333333332`
