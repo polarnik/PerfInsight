@@ -28,15 +28,18 @@ public class StackTraceFilter {
                 if(node.count_multiplicator != null && node.count_multiplicator >= count_multiplicator) {
                     skipMode = false;
                 }
-                if(i + 1 < stackTrace.nodes.size()) {
-                    Node nextNode = stackTrace.nodes.get(i + 1);
-                    if(nextNode.self_time_percent != null && nextNode.self_time_percent >= min_self_time_percent) {
-                        skipMode = false;
-                    }
-                    if(nextNode.count_multiplicator != null && nextNode.count_multiplicator >= count_multiplicator) {
-                        skipMode = false;
+                for(int test = 1; test < 5; test++) {
+                    if(skipMode && i + test < stackTrace.nodes.size()) {
+                        Node nextNode = stackTrace.nodes.get(i + test);
+                        if(nextNode.self_time_percent != null && nextNode.self_time_percent >= min_self_time_percent) {
+                            skipMode = false;
+                        }
+                        if(nextNode.count_multiplicator != null && nextNode.count_multiplicator >= count_multiplicator) {
+                            skipMode = false;
+                        }
                     }
                 }
+
                 if(!skipMode) {
                     newStackTrace.nodes.add(node);
                 }
